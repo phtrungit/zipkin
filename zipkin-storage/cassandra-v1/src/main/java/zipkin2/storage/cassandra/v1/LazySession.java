@@ -13,12 +13,12 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 
 final class LazySession {
   private final SessionFactory sessionFactory;
   private final CassandraStorage storage;
-  private volatile Session session;
+  private volatile CqlSession session;
   private volatile Schema.Metadata metadata; // guarded by session
 
   LazySession(SessionFactory sessionFactory, CassandraStorage storage) {
@@ -26,7 +26,7 @@ final class LazySession {
     this.storage = storage;
   }
 
-  Session get() {
+  CqlSession get() {
     if (session == null) {
       synchronized (this) {
         if (session == null) {
@@ -44,7 +44,7 @@ final class LazySession {
   }
 
   void close() {
-    Session maybeSession = session;
+    CqlSession maybeSession = session;
     if (maybeSession != null) maybeSession.close();
   }
 }

@@ -13,37 +13,38 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.DistinctSortedStrings;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static zipkin2.storage.cassandra.Schema.TABLE_SERVICE_REMOTE_SERVICES;
 
 final class SelectRemoteServiceNames extends ResultSetFutureCall<ResultSet> {
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final DistinctSortedStrings remoteServices = new DistinctSortedStrings("remote_service");
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
-      this.preparedStatement = session.prepare(QueryBuilder.select("remote_service")
-        .from(TABLE_SERVICE_REMOTE_SERVICES)
-        .where(QueryBuilder.eq("service", QueryBuilder.bindMarker("service")))
-        .limit(QueryBuilder.bindMarker("limit_")));
+      this.preparedStatement =
+        session.prepare(QueryBuilder.selectFrom(TABLE_SERVICE_REMOTE_SERVICES)
+          .column("remote_service")
+          .whereColumn("service").isEqualTo(QueryBuilder.bindMarker("service"))
+          .limit(QueryBuilder.bindMarker("limit_")).build());
     }
 
     Call<List<String>> create(String serviceName) {
       if (serviceName == null || serviceName.isEmpty()) return Call.emptyList();
-      String service = checkNotNull(serviceName, "serviceName").toLowerCase();
+      String service = serviceName.toLowerCase();
       return new SelectRemoteServiceNames(this, service).flatMap(remoteServices);
     }
   }
@@ -57,7 +58,7 @@ final class SelectRemoteServiceNames extends ResultSetFutureCall<ResultSet> {
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletableFuture<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement
       .bind()
       .setString("service", service)

@@ -13,10 +13,10 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.HostDistance;
-import com.datastax.driver.core.PoolingOptions;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.Cluster;
+import com.datastax.oss.driver.api.core.cql.HostDistance;
+import com.datastax.oss.driver.api.core.cql.PoolingOptions;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.io.Closer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -37,14 +37,14 @@ public class CassandraStorageExtension implements BeforeAllCallback, AfterAllCal
   static final int CASSANDRA_PORT = 9042;
   final String image;
   CassandraContainer container;
-  Session session;
+  CqlSession session;
   Closer closer = Closer.create();
 
   CassandraStorageExtension(String image) {
     this.image = image;
   }
 
-  Session session() {
+  CqlSession session() {
     return session;
   }
 
@@ -78,9 +78,9 @@ public class CassandraStorageExtension implements BeforeAllCallback, AfterAllCal
     closer.register(session);
   }
 
-  Session tryToInitializeSession() throws IOException {
+  CqlSession tryToInitializeSession() throws IOException {
     Cluster cluster = closer.register(getCluster(contactPoint()));
-    Session session = closer.register(cluster.newSession());
+    CqlSession session = closer.register(cluster.newSession());
     try {
       session.execute("SELECT now() FROM system.local");
     } catch (RuntimeException e) {
@@ -144,7 +144,7 @@ public class CassandraStorageExtension implements BeforeAllCallback, AfterAllCal
               new InetSocketAddress(getContainerIpAddress(), getMappedPort(9042));
 
             try (Cluster cluster = getCluster(address);
-                Session session = cluster.newSession()) {
+                CqlSession session = cluster.newSession()) {
               session.execute("SELECT now() FROM system.local");
               logger().info("Obtained a connection to container ({})", cluster.getClusterName());
               return null; // unused value

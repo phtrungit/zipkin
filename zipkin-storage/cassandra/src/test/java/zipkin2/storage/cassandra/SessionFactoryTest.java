@@ -13,17 +13,17 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.AuthProvider;
-import com.datastax.driver.core.Authenticator;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Host;
-import com.datastax.driver.core.HostDistance;
-import com.datastax.driver.core.PlainTextAuthProvider;
-import com.datastax.driver.core.PoolingOptions;
-import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
-import com.datastax.driver.core.policies.LatencyAwarePolicy;
-import com.datastax.driver.core.policies.RoundRobinPolicy;
-import com.datastax.driver.core.policies.TokenAwarePolicy;
+import com.datastax.oss.driver.api.core.cql.AuthProvider;
+import com.datastax.oss.driver.api.core.cql.Authenticator;
+import com.datastax.oss.driver.api.core.cql.Cluster;
+import com.datastax.oss.driver.api.core.cql.Host;
+import com.datastax.oss.driver.api.core.cql.HostDistance;
+import com.datastax.oss.driver.api.core.cql.PlainTextAuthProvider;
+import com.datastax.oss.driver.api.core.cql.PoolingOptions;
+import com.datastax.oss.driver.api.core.cql.policies.DCAwareRoundRobinPolicy;
+import com.datastax.oss.driver.api.core.cql.policies.LatencyAwarePolicy;
+import com.datastax.oss.driver.api.core.cql.policies.RoundRobinPolicy;
+import com.datastax.oss.driver.api.core.cql.policies.TokenAwarePolicy;
 import java.net.InetSocketAddress;
 import org.junit.Test;
 

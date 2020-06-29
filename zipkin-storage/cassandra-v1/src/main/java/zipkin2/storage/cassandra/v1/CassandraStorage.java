@@ -13,8 +13,8 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.common.cache.CacheBuilderSpec;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * CQL3 implementation of zipkin storage.
  *
- * <p>Queries are logged to the category "com.datastax.driver.core.QueryLogger" when debug or trace
+ * <p>Queries are logged to the category "com.datastax.oss.driver.api.core.cql.QueryLogger" when debug or trace
  * is enabled via SLF4J. Trace level includes bound values.
  *
  * <p>Redundant requests to store service or span names are ignored for an hour to reduce load. This
@@ -326,7 +326,7 @@ public class CassandraStorage extends StorageComponent { // not final for mockin
   }
 
   /** Lazy initializes or returns the session in use by this storage component. */
-  Session session() {
+  CqlSession session() {
     return session.get();
   }
 

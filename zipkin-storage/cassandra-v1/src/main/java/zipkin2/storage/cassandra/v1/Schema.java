@@ -13,10 +13,10 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.ProtocolVersion;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.Cluster;
+import com.datastax.oss.driver.api.core.cql.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.cql.ProtocolVersion;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -40,7 +40,7 @@ final class Schema {
   private Schema() {
   }
 
-  static Metadata readMetadata(Session session) {
+  static Metadata readMetadata(CqlSession session) {
     KeyspaceMetadata keyspaceMetadata = getKeyspaceMetadata(session);
 
     Map<String, String> replication = keyspaceMetadata.getReplication();
@@ -92,7 +92,7 @@ final class Schema {
     }
   }
 
-  static KeyspaceMetadata getKeyspaceMetadata(Session session) {
+  static KeyspaceMetadata getKeyspaceMetadata(CqlSession session) {
     String keyspace = session.getLoggedKeyspace();
     Cluster cluster = session.getCluster();
     KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspace);
@@ -106,7 +106,7 @@ final class Schema {
     return keyspaceMetadata;
   }
 
-  static void ensureExists(String keyspace, Session session) {
+  static void ensureExists(String keyspace, CqlSession session) {
     KeyspaceMetadata keyspaceMetadata = session.getCluster().getMetadata().getKeyspace(keyspace);
     if (keyspaceMetadata == null || keyspaceMetadata.getTable("traces") == null) {
       LOG.info("Installing schema {}", SCHEMA);
@@ -143,7 +143,7 @@ final class Schema {
     return keyspaceMetadata.getTable(REMOTE_SERVICE_NAMES) != null;
   }
 
-  static void applyCqlFile(String keyspace, Session session, String resource) {
+  static void applyCqlFile(String keyspace, CqlSession session, String resource) {
     try (Reader reader = new InputStreamReader(Schema.class.getResourceAsStream(resource), UTF_8)) {
       for (String cmd : CharStreams.toString(reader).split(";", 100)) {
         cmd = cmd.trim().replace(" zipkin", " " + keyspace);

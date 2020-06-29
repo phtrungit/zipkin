@@ -13,7 +13,7 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.LocalDate;
+import com.datastax.oss.driver.api.core.cql.LocalDate;
 import com.google.common.collect.ImmutableMap;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;

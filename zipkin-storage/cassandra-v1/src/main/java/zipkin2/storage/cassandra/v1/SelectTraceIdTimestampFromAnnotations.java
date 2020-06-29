@@ -13,15 +13,17 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import java.nio.ByteBuffer;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
@@ -38,11 +40,11 @@ final class SelectTraceIdTimestampFromAnnotations extends ResultSetFutureCall<Re
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final TimestampCodec timestampCodec;
 
-    Factory(Session session, TimestampCodec timestampCodec, Set<Integer> buckets) {
+    Factory(CqlSession session, TimestampCodec timestampCodec, Set<Integer> buckets) {
       this.session = session;
       this.timestampCodec = timestampCodec;
       this.preparedStatement =
@@ -77,7 +79,7 @@ final class SelectTraceIdTimestampFromAnnotations extends ResultSetFutureCall<Re
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletionStage<AsyncResultSet> newFuture() {
     ByteBuffer annotation = CassandraUtil.toByteBuffer(input.annotation());
     Statement bound =
         factory

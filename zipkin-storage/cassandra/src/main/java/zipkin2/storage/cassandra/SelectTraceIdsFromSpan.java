@@ -13,18 +13,20 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Select;
 import com.google.auto.value.AutoValue;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import zipkin2.Call;
@@ -33,7 +35,7 @@ import zipkin2.storage.cassandra.CassandraSpanStore.TimestampRange;
 import zipkin2.storage.cassandra.internal.call.AccumulateAllResults;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder.bindMarker;
 import static zipkin2.storage.cassandra.Schema.TABLE_SPAN;
 
 /**
@@ -67,10 +69,10 @@ final class SelectTraceIdsFromSpan extends ResultSetFutureCall<ResultSet> {
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement withAnnotationQuery, withServiceAndAnnotationQuery;
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       // separate to avoid: "Unsupported unset value for column duration" maybe SASI related
       // TODO: revisit on next driver update
@@ -126,7 +128,7 @@ final class SelectTraceIdsFromSpan extends ResultSetFutureCall<ResultSet> {
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletableFuture<AsyncResultSet> newFuture() {
     BoundStatement bound = preparedStatement.bind();
     if (input.l_service() != null) bound.setString("l_service", input.l_service());
     if (input.annotation_query() != null) {

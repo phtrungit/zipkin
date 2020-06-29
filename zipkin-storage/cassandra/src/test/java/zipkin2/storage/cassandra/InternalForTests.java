@@ -13,9 +13,9 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.LocalDate;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.LocalDate;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.List;
 import org.junit.jupiter.api.TestInfo;
 import zipkin2.DependencyLink;

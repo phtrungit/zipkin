@@ -13,12 +13,13 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -26,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import zipkin2.Call;
@@ -44,14 +46,14 @@ import static zipkin2.storage.cassandra.Schema.TABLE_SPAN;
 final class SelectFromSpan extends ResultSetFutureCall<ResultSet> {
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final ReadSpans readSpans;
     final Call.Mapper<List<Span>, List<List<Span>>> groupByTraceId;
     final boolean strictTraceId;
     final int maxTraceCols;
 
-    Factory(Session session, boolean strictTraceId, int maxTraceCols) {
+    Factory(CqlSession session, boolean strictTraceId, int maxTraceCols) {
       this.session = session;
       this.readSpans = new ReadSpans();
       this.preparedStatement =
@@ -131,7 +133,7 @@ final class SelectFromSpan extends ResultSetFutureCall<ResultSet> {
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletableFuture<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(
         factory.preparedStatement.bind().setSet("trace_id", trace_id).setInt("limit_", limit_));
   }

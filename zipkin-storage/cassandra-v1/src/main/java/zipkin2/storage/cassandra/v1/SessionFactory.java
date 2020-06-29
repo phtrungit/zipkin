@@ -13,15 +13,15 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.HostDistance;
-import com.datastax.driver.core.PoolingOptions;
-import com.datastax.driver.core.QueryLogger;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
-import com.datastax.driver.core.policies.LatencyAwarePolicy;
-import com.datastax.driver.core.policies.RoundRobinPolicy;
-import com.datastax.driver.core.policies.TokenAwarePolicy;
+import com.datastax.oss.driver.api.core.cql.Cluster;
+import com.datastax.oss.driver.api.core.cql.HostDistance;
+import com.datastax.oss.driver.api.core.cql.PoolingOptions;
+import com.datastax.oss.driver.api.core.cql.QueryLogger;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.policies.DCAwareRoundRobinPolicy;
+import com.datastax.oss.driver.api.core.cql.policies.LatencyAwarePolicy;
+import com.datastax.oss.driver.api.core.cql.policies.RoundRobinPolicy;
+import com.datastax.oss.driver.api.core.cql.policies.TokenAwarePolicy;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import zipkin2.storage.cassandra.internal.HostAndPort;
  */
 public interface SessionFactory {
 
-  Session create(CassandraStorage storage);
+  CqlSession create(CassandraStorage storage);
 
   final class Default implements SessionFactory {
 
@@ -46,13 +46,13 @@ public interface SessionFactory {
      * exception occurred.
      */
     @Override
-    public Session create(CassandraStorage cassandra) {
+    public CqlSession create(CassandraStorage cassandra) {
       Closer closer = Closer.create();
       try {
         Cluster cluster = closer.register(buildCluster(cassandra));
         cluster.register(new QueryLogger.Builder().build());
         if (cassandra.ensureSchema) {
-          Session session = closer.register(cluster.connect());
+          CqlSession session = closer.register(cluster.connect());
           Schema.ensureExists(cassandra.keyspace, session);
           session.execute("USE " + cassandra.keyspace);
           return session;

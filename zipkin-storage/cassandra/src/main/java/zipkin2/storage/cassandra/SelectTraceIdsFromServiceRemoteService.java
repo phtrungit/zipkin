@@ -13,18 +13,20 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.CassandraSpanStore.TimestampRange;
 import zipkin2.storage.cassandra.internal.call.AccumulateTraceIdTsUuid;
@@ -59,10 +61,10 @@ final class SelectTraceIdsFromServiceRemoteService extends ResultSetFutureCall<R
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       this.preparedStatement = session.prepare(QueryBuilder.select("ts", "trace_id")
         .from(TABLE_TRACE_BY_SERVICE_REMOTE_SERVICE)
@@ -154,7 +156,7 @@ final class SelectTraceIdsFromServiceRemoteService extends ResultSetFutureCall<R
     this.input = input;
   }
 
-  @Override protected ResultSetFuture newFuture() {
+  @Override protected CompletableFuture<AsyncResultSet> newFuture() {
     Statement bound = preparedStatement.bind()
       .setString("service", input.service())
       .setString("remote_service", input.remote_service())

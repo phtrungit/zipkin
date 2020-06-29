@@ -13,13 +13,14 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -27,6 +28,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ final class Indexer {
   final PreparedStatement prepared;
   final TimestampCodec timestampCodec;
   final IndexSupport index;
-  final Session session;
+  final CqlSession session;
 
   /**
    * Shared across all threads, as updates to indexes can come from any thread. Null disables
@@ -58,7 +60,7 @@ final class Indexer {
   @Nullable private final ConcurrentMap<PartitionKeyToTraceId, Pair> sharedState;
 
   Indexer(
-      Session session,
+      CqlSession session,
       int indexTtl,
       @Nullable ConcurrentMap<PartitionKeyToTraceId, Pair> sharedState,
       IndexSupport index) {
@@ -97,7 +99,7 @@ final class Indexer {
     }
 
     @Override
-    protected ResultSetFuture newFuture() {
+    protected CompletionStage<AsyncResultSet> newFuture() {
       BoundStatement bound =
           prepared
               .bind()
@@ -228,12 +230,12 @@ final class Indexer {
 
   static class Factory {
 
-    private final Session session;
+    private final CqlSession session;
     private final int indexTtl;
     private final ConcurrentMap<PartitionKeyToTraceId, Pair> sharedState;
 
     public Factory(
-        Session session,
+        CqlSession session,
         int indexTtl,
         @Nullable ConcurrentMap<PartitionKeyToTraceId, Pair> sharedState) {
       this.session = session;

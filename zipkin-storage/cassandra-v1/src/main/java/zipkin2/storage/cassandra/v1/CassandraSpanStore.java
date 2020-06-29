@@ -13,8 +13,8 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.ProtocolVersion;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.ProtocolVersion;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.Range;
 import java.util.ArrayList;
@@ -62,7 +62,7 @@ public final class CassandraSpanStore implements SpanStore, Traces, ServiceAndSp
   @Nullable final SelectTraceIdTimestampFromAnnotations.Factory selectTraceIdsByAnnotation;
 
   CassandraSpanStore(CassandraStorage storage) {
-    Session session = storage.session();
+    CqlSession session = storage.session();
     Schema.Metadata metadata = storage.metadata();
     maxTraceCols = storage.maxTraceCols;
     indexFetchMultiplier = storage.indexFetchMultiplier;

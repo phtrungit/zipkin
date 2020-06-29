@@ -13,13 +13,15 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
+import java.util.concurrent.CompletableFuture;
 import zipkin2.storage.cassandra.internal.call.DeduplicatingVoidCallFactory;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
@@ -42,7 +44,7 @@ final class InsertServiceRemoteService extends ResultSetFutureCall<Void> {
   }
 
   static class Factory extends DeduplicatingVoidCallFactory<Input> {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
 
     Factory(CassandraStorage storage) {
@@ -71,7 +73,7 @@ final class InsertServiceRemoteService extends ResultSetFutureCall<Void> {
     this.input = input;
   }
 
-  @Override protected ResultSetFuture newFuture() {
+  @Override protected CompletableFuture<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind()
       .setString("service", input.service())
       .setString("remote_service", input.remoteService()));

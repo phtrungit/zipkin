@@ -13,18 +13,20 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import zipkin2.Call;
@@ -45,14 +47,14 @@ import zipkin2.v1.V1SpanConverter;
 final class SelectFromTraces extends ResultSetFutureCall<ResultSet> {
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final DecodeAndConvertSpans accumulateSpans;
     final Call.Mapper<List<Span>, List<List<Span>>> groupByTraceId;
     final int maxTraceCols; // amount of spans per trace is almost always larger than trace IDs
     final boolean strictTraceId;
 
-    Factory(Session session, boolean strictTraceId, int maxTraceCols) {
+    Factory(CqlSession session, boolean strictTraceId, int maxTraceCols) {
       this.session = session;
       this.accumulateSpans = new DecodeAndConvertSpans();
 
@@ -109,7 +111,7 @@ final class SelectFromTraces extends ResultSetFutureCall<ResultSet> {
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletionStage<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(
       factory.preparedStatement.bind().setSet("trace_id", trace_id).setInt("limit_", limit_));
   }

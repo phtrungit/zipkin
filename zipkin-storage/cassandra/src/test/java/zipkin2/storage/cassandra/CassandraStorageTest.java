@@ -13,7 +13,7 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.exceptions.NoHostAvailableException;
+import com.datastax.oss.driver.api.core.cql.exceptions.NoHostAvailableException;
 import org.junit.Test;
 import zipkin2.CheckResult;
 import zipkin2.Component;

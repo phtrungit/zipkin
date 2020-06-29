@@ -13,8 +13,8 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.CqlSession;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 import zipkin2.TestObjects;
@@ -31,7 +31,7 @@ abstract class ITEnsureSchema {
 
   abstract String keyspace();
 
-  abstract Session session();
+  abstract CqlSession session();
 
   abstract InetSocketAddress contactPoint();
 

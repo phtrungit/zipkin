@@ -13,10 +13,10 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.exceptions.DriverException;
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.cql.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.exceptions.DriverException;
+import com.datastax.oss.driver.api.core.cql.utils.UUIDs;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +58,7 @@ class CassandraSpanStore implements SpanStore, Traces, ServiceAndSpanNames { //n
   @Nullable final SelectTraceIdsFromServiceRemoteService.Factory traceIdsFromServiceRemoteService;
 
   CassandraSpanStore(CassandraStorage storage) {
-    Session session = storage.session();
+    CqlSession session = storage.session();
     Schema.Metadata metadata = storage.metadata();
     int maxTraceCols = storage.maxTraceCols();
     indexFetchMultiplier = storage.indexFetchMultiplier();
@@ -100,7 +100,7 @@ class CassandraSpanStore implements SpanStore, Traces, ServiceAndSpanNames { //n
    *
    * <p>If dropped, trying to search by annotation in the UI will throw an IllegalStateException.
    */
-  static SelectTraceIdsFromSpan.Factory initialiseSelectTraceIdsFromSpan(Session session) {
+  static SelectTraceIdsFromSpan.Factory initialiseSelectTraceIdsFromSpan(CqlSession session) {
     try {
       return new SelectTraceIdsFromSpan.Factory(session);
     } catch (DriverException ex) {

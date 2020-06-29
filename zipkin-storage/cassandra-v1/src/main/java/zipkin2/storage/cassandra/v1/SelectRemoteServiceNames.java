@@ -13,12 +13,14 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.DistinctSortedStrings;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
@@ -28,12 +30,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 final class SelectRemoteServiceNames extends ResultSetFutureCall<ResultSet> {
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final DistinctSortedStrings remoteServiceNames =
       new DistinctSortedStrings("remote_service_name");
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       this.preparedStatement = session.prepare(QueryBuilder.select("remote_service_name")
         .from(Tables.REMOTE_SERVICE_NAMES)
@@ -57,7 +59,7 @@ final class SelectRemoteServiceNames extends ResultSetFutureCall<ResultSet> {
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletionStage<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind()
       .setString("service_name", service_name)
       // no one is ever going to browse so many remote service names

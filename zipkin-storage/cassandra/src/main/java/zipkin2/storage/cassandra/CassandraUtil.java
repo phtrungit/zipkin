@@ -13,8 +13,14 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.LocalDate;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UncheckedIOException;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -31,6 +37,7 @@ import zipkin2.internal.Nullable;
 import zipkin2.internal.Platform;
 import zipkin2.storage.QueryRequest;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static zipkin2.internal.Platform.SHORT_STRING_LENGTH;
 
 final class CassandraUtil {
@@ -56,7 +63,7 @@ final class CassandraUtil {
    *
    * @see QueryRequest#annotationQuery()
    */
-  static @Nullable String annotationQuery(Span span) {
+  @Nullable static String annotationQuery(Span span) {
     if (span.annotations().isEmpty() && span.tags().isEmpty()) return null;
 
     char delimiter = '░'; // as very unlikely to be in the query
@@ -122,8 +129,22 @@ final class CassandraUtil {
   static List<LocalDate> getDays(long endTs, @Nullable Long lookback) {
     List<LocalDate> result = new ArrayList<>();
     for (long epochMillis : DateUtil.epochDays(endTs, lookback)) {
-      result.add(LocalDate.fromMillisSinceEpoch(epochMillis));
+      result.add(Instant.ofEpochMilli(epochMillis).atZone(ZoneOffset.UTC).toLocalDate());
     }
     return result;
+  }
+
+  static String resourceToString(String resource) {
+    try (Reader reader = new InputStreamReader(Schema.class.getResourceAsStream(resource), UTF_8)) {
+      char[] buf = new char[2048];
+      StringBuilder builder = new StringBuilder();
+      int read;
+      while ((read = reader.read(buf)) != -1) {
+        builder.append(buf, 0, read);
+      }
+      return builder.toString();
+    } catch (IOException ex) {
+      throw new UncheckedIOException(ex);
+    }
   }
 }

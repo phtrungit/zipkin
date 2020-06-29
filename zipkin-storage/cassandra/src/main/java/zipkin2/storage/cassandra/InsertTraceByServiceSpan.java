@@ -13,14 +13,16 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
@@ -44,11 +46,11 @@ final class InsertTraceByServiceSpan extends ResultSetFutureCall<Void> {
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final boolean strictTraceId;
 
-    Factory(Session session, boolean strictTraceId) {
+    Factory(CqlSession session, boolean strictTraceId) {
       this.session = session;
       this.preparedStatement =
           session.prepare(
@@ -91,7 +93,7 @@ final class InsertTraceByServiceSpan extends ResultSetFutureCall<Void> {
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletableFuture<AsyncResultSet> newFuture() {
     BoundStatement bound =
         factory
             .preparedStatement

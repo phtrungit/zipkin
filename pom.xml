@@ -60,7 +60,7 @@
     <wire.version>3.0.2</wire.version>
     <unpack-proto.directory>${project.build.directory}/test/proto</unpack-proto.directory>
 
-    <cassandra-driver-core.version>3.9.0</cassandra-driver-core.version>
+    <java-driver.version>4.7.1</java-driver.version>
     <jooq.version>3.13.2</jooq.version>
     <micrometer.version>1.5.1</micrometer.version>
     <spring-boot.version>2.3.1.RELEASE</spring-boot.version>

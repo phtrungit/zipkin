@@ -13,30 +13,22 @@
  */
 package zipkin2.storage.cassandra.internal.call;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.exceptions.BusyConnectionException;
-import com.datastax.driver.core.exceptions.BusyPoolException;
-import com.datastax.driver.core.exceptions.DriverException;
-import com.datastax.driver.core.exceptions.DriverInternalError;
-import com.datastax.driver.core.exceptions.QueryConsistencyException;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.Uninterruptibles;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.BiConsumer;
 import zipkin2.Call;
 import zipkin2.Callback;
 
-/**
- * Future call pattern that takes advantage of special 'get' hooks on {@link
- * com.datastax.driver.core.ResultSetFuture}.
- */
+
 // some copy/pasting is ok here as debugging is obscured when the type hierarchy gets deep.
 public abstract class ResultSetFutureCall<V> extends Call.Base<V>
-  implements Call.Mapper<ResultSet, V> {
+  implements Call.Mapper<AsyncResultSet, V> {
   /** Defers I/O until {@link #enqueue(Callback)} or {@link #execute()} are called. */
-  protected abstract ListenableFuture<ResultSet> newFuture();
+  protected abstract CompletableFuture<AsyncResultSet> newFuture();
 
-  volatile ListenableFuture<ResultSet> future;
+  volatile CompletableFuture<AsyncResultSet> future;
 
   @Override
   protected V doExecute() {
@@ -45,12 +37,14 @@ public abstract class ResultSetFutureCall<V> extends Call.Base<V>
 
   @Override
   protected void doEnqueue(Callback<V> callback) {
-    // Similar to Futures.addCallback except doesn't double-wrap
-    class CallbackListener implements Runnable {
-      @Override
-      public void run() {
+    class CallbackConsumer implements BiConsumer<AsyncResultSet, Throwable> {
+      @Override public void accept(AsyncResultSet input, Throwable error) {
+        if (error != null) {
+          callback.onError(error);
+          return;
+        }
         try {
-          callback.onSuccess(map(getUninterruptibly(future)));
+          callback.onSuccess(map(input));
         } catch (Throwable t) {
           propagateIfFatal(t);
           callback.onError(t);
@@ -58,7 +52,7 @@ public abstract class ResultSetFutureCall<V> extends Call.Base<V>
       }
     }
     try {
-      (future = newFuture()).addListener(new CallbackListener(), DirectExecutor.INSTANCE);
+      (future = newFuture()).whenComplete(new CallbackConsumer());
     } catch (Throwable t) {
       propagateIfFatal(t);
       callback.onError(t);
@@ -68,24 +62,26 @@ public abstract class ResultSetFutureCall<V> extends Call.Base<V>
 
   @Override
   protected void doCancel() {
-    ListenableFuture<ResultSet> maybeFuture = future;
+    CompletableFuture<AsyncResultSet> maybeFuture = future;
     if (maybeFuture != null) maybeFuture.cancel(true);
   }
 
   @Override
   protected final boolean doIsCanceled() {
-    ListenableFuture<ResultSet> maybeFuture = future;
+    CompletableFuture<AsyncResultSet> maybeFuture = future;
     return maybeFuture != null && maybeFuture.isCancelled();
   }
 
-  /** Sets {@link zipkin2.storage.StorageComponent#isOverCapacity(java.lang.Throwable)} */
+  /**
+   * Sets {@link zipkin2.storage.StorageComponent#isOverCapacity(java.lang.Throwable)}
+   */
   public static boolean isOverCapacity(Throwable e) {
     return e instanceof QueryConsistencyException ||
       e instanceof BusyConnectionException ||
       e instanceof BusyPoolException;
   }
 
-  static ResultSet getUninterruptibly(ListenableFuture<ResultSet> future) {
+  static ResultSet getUninterruptibly(CompletableFuture<ResultSet> future) {
     if (future instanceof ResultSetFuture) {
       return ((ResultSetFuture) future).getUninterruptibly();
     }

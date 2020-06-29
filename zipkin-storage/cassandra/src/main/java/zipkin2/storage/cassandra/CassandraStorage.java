@@ -13,10 +13,8 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.HostDistance;
-import com.datastax.driver.core.PoolingOptions;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
 import java.util.Collections;
@@ -37,7 +35,7 @@ import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 /**
  * CQL3 implementation of zipkin storage.
  *
- * <p>Queries are logged to the category "com.datastax.driver.core.QueryLogger" when debug or trace
+ * <p>Queries are logged to the category "com.datastax.oss.driver.api.core.cql.QueryLogger" when debug or trace
  * is enabled via SLF4J. Trace level includes bound values.
  *
  * <p>Schema is installed by default from "/zipkin2-schema.cql"
@@ -52,7 +50,7 @@ public abstract class CassandraStorage extends StorageComponent {
   public interface SessionFactory {
     SessionFactory DEFAULT = new DefaultSessionFactory();
 
-    Session create(CassandraStorage storage);
+    CqlSession create(CassandraStorage storage);
   }
 
   public static Builder newBuilder() {
@@ -61,8 +59,6 @@ public abstract class CassandraStorage extends StorageComponent {
         .searchEnabled(true)
         .keyspace(Schema.DEFAULT_KEYSPACE)
         .contactPoints("localhost")
-        // Zipkin collectors can create out a lot of async requests in bursts
-        .poolingOptions(new PoolingOptions().setMaxQueueSize(40960).setPoolTimeoutMillis(60000))
         .ensureSchema(true)
         .useSsl(false)
         .maxTraceCols(100000)
@@ -114,13 +110,9 @@ public abstract class CassandraStorage extends StorageComponent {
 
     /** Max pooled connections per datacenter-local host. Defaults to 8 */
     public final Builder maxConnections(int maxConnections) {
-      poolingOptions().setMaxConnectionsPerHost(HostDistance.LOCAL, maxConnections);
+      // TODO at least warn we are ignoring this, possibly suggest override with hocon
       return this;
     }
-
-    abstract PoolingOptions poolingOptions(); // exposed to customize
-
-    abstract Builder poolingOptions(PoolingOptions poolingOptions);
 
     /**
      * Ensures that schema exists, if enabled tries to execute script
@@ -167,8 +159,6 @@ public abstract class CassandraStorage extends StorageComponent {
 
   abstract String contactPoints();
 
-  abstract PoolingOptions poolingOptions();
-
   @Nullable
   abstract String localDc();
 
@@ -203,8 +193,8 @@ public abstract class CassandraStorage extends StorageComponent {
 
   /** Lazy initializes or returns the session in use by this storage component. */
   @Memoized
-  Session session() {
-    Session result = sessionFactory().create(this);
+  CqlSession session() {
+    CqlSession result = sessionFactory().create(this);
     provisioned = true;
     return result;
   }
@@ -246,7 +236,7 @@ public abstract class CassandraStorage extends StorageComponent {
   public CheckResult check() {
     try {
       if (closeCalled) throw new IllegalStateException("closed");
-      session().execute(QueryBuilder.select("trace_id").from("span").limit(1));
+      session().execute(QueryBuilder.selectFrom("span").column("trace_id").limit(1).build());
     } catch (Throwable e) {
       Call.propagateIfFatal(e);
       return CheckResult.failed(e);

@@ -13,18 +13,20 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import zipkin2.Call;
 import zipkin2.internal.Nullable;
@@ -79,11 +81,11 @@ final class InsertSpan extends ResultSetFutureCall<Void> {
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final boolean strictTraceId, searchEnabled;
 
-    Factory(Session session, boolean strictTraceId, boolean searchEnabled) {
+    Factory(CqlSession session, boolean strictTraceId, boolean searchEnabled) {
       this.session = session;
       Insert insertQuery =
           QueryBuilder.insertInto(TABLE_SPAN)
@@ -179,9 +181,10 @@ final class InsertSpan extends ResultSetFutureCall<Void> {
    * those writes, as the write is asynchronous anyway. An example of this approach is in the
    * cassandra-reaper project here:
    * https://github.com/thelastpickle/cassandra-reaper/blob/master/src/server/src/main/java/io/cassandrareaper/storage/CassandraStorage.java#L622-L642
+   * @return
    */
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletableFuture<AsyncResultSet> newFuture() {
     BoundStatement bound =
         factory
             .preparedStatement

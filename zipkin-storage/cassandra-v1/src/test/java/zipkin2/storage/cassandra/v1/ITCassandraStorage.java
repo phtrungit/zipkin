@@ -13,8 +13,8 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.Host;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.Host;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -289,7 +289,7 @@ class ITCassandraStorage {
       return InternalForTests.keyspace(testInfo);
     }
 
-    @Override protected Session session() {
+    @Override protected CqlSession session() {
       return backend.session;
     }
 
@@ -307,7 +307,7 @@ class ITCassandraStorage {
 
   static void blockWhileInFlight(CassandraStorage storage) {
     // Now, block until writes complete, notably so we can read them.
-    Session.State state = storage.session().getState();
+    CqlSession.State state = storage.session().getState();
     refresh:
     while (true) {
       for (Host host : state.getConnectedHosts()) {

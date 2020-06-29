@@ -13,15 +13,17 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.LocalDate;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.LocalDate;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import zipkin2.Call;
 import zipkin2.DependencyLink;
 import zipkin2.internal.DependencyLinker;
@@ -32,10 +34,10 @@ import static zipkin2.storage.cassandra.Schema.TABLE_DEPENDENCY;
 final class SelectDependencies extends ResultSetFutureCall<List<DependencyLink>> {
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       this.preparedStatement =
           session.prepare(
@@ -59,7 +61,7 @@ final class SelectDependencies extends ResultSetFutureCall<List<DependencyLink>>
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletableFuture<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind().setList("days", days));
   }
 

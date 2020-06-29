@@ -13,14 +13,16 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import java.nio.ByteBuffer;
+import java.util.concurrent.CompletionStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zipkin2.Call;
@@ -42,12 +44,12 @@ final class InsertTrace extends ResultSetFutureCall<Void> {
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final TimestampCodec timestampCodec;
     final boolean dateTieredCompactionStrategy;
 
-    Factory(Session session, Schema.Metadata metadata, int spanTtl) {
+    Factory(CqlSession session, Schema.Metadata metadata, int spanTtl) {
       this.session = session;
       this.timestampCodec = new TimestampCodec(session);
       Insert insertQuery =
@@ -100,7 +102,7 @@ final class InsertTrace extends ResultSetFutureCall<Void> {
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletionStage<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(
         factory
             .preparedStatement

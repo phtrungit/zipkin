@@ -13,8 +13,8 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;

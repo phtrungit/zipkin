@@ -13,10 +13,10 @@
  */
 package zipkin2.storage.cassandra.internal.call;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.exceptions.BusyConnectionException;
-import com.datastax.driver.core.exceptions.BusyPoolException;
-import com.datastax.driver.core.exceptions.QueryConsistencyException;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.exceptions.BusyConnectionException;
+import com.datastax.oss.driver.api.core.cql.exceptions.BusyPoolException;
+import com.datastax.oss.driver.api.core.cql.exceptions.QueryConsistencyException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
 import org.junit.Test;

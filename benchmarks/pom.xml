@@ -129,16 +129,15 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>com.datastax.cassandra</groupId>
-          <artifactId>cassandra-driver-core</artifactId>
+          <groupId>com.datastax.oss</groupId>
+          <artifactId>java-driver-core</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.datastax.cassandra</groupId>
-      <artifactId>cassandra-driver-core</artifactId>
-      <version>${cassandra-driver-core.version}</version>
-      <classifier>shaded</classifier>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-core</artifactId>
+      <version>${java-driver.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -148,14 +147,14 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.datastax.cassandra</groupId>
-      <artifactId>cassandra-driver-mapping</artifactId>
-      <version>${cassandra-driver-core.version}</version>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-mapper-runtime</artifactId>
+      <version>${java-driver.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>com.datastax.cassandra</groupId>
-          <artifactId>cassandra-driver-core</artifactId>
+          <groupId>com.datastax.oss</groupId>
+          <artifactId>java-driver-core</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

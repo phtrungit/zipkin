@@ -13,17 +13,19 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Select;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import zipkin2.Call;
 import zipkin2.DependencyLink;
 import zipkin2.internal.Dependencies;
@@ -32,10 +34,10 @@ import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
 final class SelectDependencies extends ResultSetFutureCall<List<DependencyLink>> {
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       Select.Where select =
           QueryBuilder.select("dependencies")
@@ -59,7 +61,7 @@ final class SelectDependencies extends ResultSetFutureCall<List<DependencyLink>>
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletionStage<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind().setList("days", epochDays));
   }
 

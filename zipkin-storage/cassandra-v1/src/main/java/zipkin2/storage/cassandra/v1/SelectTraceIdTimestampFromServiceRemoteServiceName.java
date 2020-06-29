@@ -13,14 +13,16 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
@@ -39,11 +41,11 @@ final class SelectTraceIdTimestampFromServiceRemoteServiceName
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final TimestampCodec timestampCodec;
 
-    Factory(Session session, TimestampCodec timestampCodec) {
+    Factory(CqlSession session, TimestampCodec timestampCodec) {
       this.session = session;
       this.timestampCodec = timestampCodec;
       this.preparedStatement = session.prepare(QueryBuilder.select("ts", "trace_id")
@@ -80,7 +82,7 @@ final class SelectTraceIdTimestampFromServiceRemoteServiceName
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletionStage<AsyncResultSet> newFuture() {
     Statement bound = factory.preparedStatement.bind()
       .setString("service_remote_service_name", input.service_remote_service_name())
       .setBytesUnsafe("start_ts", factory.timestampCodec.serialize(input.start_ts()))

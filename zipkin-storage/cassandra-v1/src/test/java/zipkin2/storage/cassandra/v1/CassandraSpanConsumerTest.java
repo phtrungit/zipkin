@@ -13,7 +13,7 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.oss.driver.api.core.cql.ProtocolVersion;
 import com.google.common.cache.CacheBuilderSpec;
 import java.util.Collections;
 import java.util.List;

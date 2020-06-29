@@ -13,12 +13,12 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Host;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.VersionNumber;
+import com.datastax.oss.driver.api.core.cql.Cluster;
+import com.datastax.oss.driver.api.core.cql.Host;
+import com.datastax.oss.driver.api.core.cql.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.cql.Metadata;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.VersionNumber;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.UUID;
@@ -35,7 +35,7 @@ public class SchemaTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test public void getKeyspaceMetadata_failsWhenVersionLessThan3_11_3() {
-    Session session = mock(Session.class);
+    CqlSession session = mock(CqlSession.class);
     Cluster cluster = mock(Cluster.class);
     Metadata metadata = mock(Metadata.class);
     Host host = mock(Host.class);
@@ -54,7 +54,7 @@ public class SchemaTest {
   }
 
   @Test public void getKeyspaceMetadata_failsWhenOneVersionLessThan3_11_3() {
-    Session session = mock(Session.class);
+    CqlSession session = mock(CqlSession.class);
     Cluster cluster = mock(Cluster.class);
     Metadata metadata = mock(Metadata.class);
     Host host1 = mock(Host.class);
@@ -76,7 +76,7 @@ public class SchemaTest {
   }
 
   @Test public void getKeyspaceMetadata_passesWhenVersion3_11_3AndKeyspaceMetadataIsNotNull() {
-    Session session = mock(Session.class);
+    CqlSession session = mock(CqlSession.class);
     Cluster cluster = mock(Cluster.class);
     Metadata metadata = mock(Metadata.class);
     Host host = mock(Host.class);
@@ -93,7 +93,7 @@ public class SchemaTest {
   }
 
   @Test public void getKeyspaceMetadata_passesWhenVersion3_11_4AndKeyspaceMetadataIsNotNull() {
-    Session session = mock(Session.class);
+    CqlSession session = mock(CqlSession.class);
     Cluster cluster = mock(Cluster.class);
     Metadata metadata = mock(Metadata.class);
     Host host = mock(Host.class);
@@ -110,7 +110,7 @@ public class SchemaTest {
   }
 
   @Test public void ensureKeyspaceMetadata_failsWhenKeyspaceMetadataIsNotNull() {
-    Session session = mock(Session.class);
+    CqlSession session = mock(CqlSession.class);
     Cluster cluster = mock(Cluster.class);
     Metadata metadata = mock(Metadata.class);
     Host host = mock(Host.class);

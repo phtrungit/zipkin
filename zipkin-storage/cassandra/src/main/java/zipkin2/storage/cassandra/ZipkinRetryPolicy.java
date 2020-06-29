@@ -13,13 +13,13 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.WriteType;
-import com.datastax.driver.core.exceptions.DriverException;
-import com.datastax.driver.core.policies.DefaultRetryPolicy;
-import com.datastax.driver.core.policies.RetryPolicy;
+import com.datastax.oss.driver.api.core.cql.Cluster;
+import com.datastax.oss.driver.api.core.cql.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.cql.WriteType;
+import com.datastax.oss.driver.api.core.cql.exceptions.DriverException;
+import com.datastax.oss.driver.api.core.cql.policies.DefaultRetryPolicy;
+import com.datastax.oss.driver.api.core.cql.policies.RetryPolicy;
 
 /** This class was copied from org.twitter.zipkin.storage.cassandra.ZipkinRetryPolicy */
 final class ZipkinRetryPolicy implements RetryPolicy {

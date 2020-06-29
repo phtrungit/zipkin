@@ -13,8 +13,8 @@
  */
 package zipkin2.storage.cassandra.internal.call;
 
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.utils.UUIDs;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;

@@ -13,12 +13,13 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.DistinctSortedStrings;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
@@ -28,17 +29,17 @@ import static zipkin2.storage.cassandra.Schema.TABLE_AUTOCOMPLETE_TAGS;
 final class SelectAutocompleteValues extends ResultSetFutureCall<ResultSet> {
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final DistinctSortedStrings values = new DistinctSortedStrings("value");
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       this.preparedStatement = session.prepare(
-        QueryBuilder.select("value")
-          .from(TABLE_AUTOCOMPLETE_TAGS)
-          .where(QueryBuilder.eq("key", QueryBuilder.bindMarker("key")))
-          .limit(QueryBuilder.bindMarker("limit_")));
+        QueryBuilder.selectFrom(TABLE_AUTOCOMPLETE_TAGS)
+          .column("value")
+          .whereColumn("key").isEqualTo(QueryBuilder.bindMarker("key"))
+          .limit(QueryBuilder.bindMarker("limit_")).build());
     }
 
     Call<List<String>> create(String key) {
@@ -54,7 +55,7 @@ final class SelectAutocompleteValues extends ResultSetFutureCall<ResultSet> {
     this.key = key;
   }
 
-  @Override protected ResultSetFuture newFuture() {
+  @Override protected CompletableFuture<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind()
       .setString("key", key)
       .setInt("limit_", 10000));

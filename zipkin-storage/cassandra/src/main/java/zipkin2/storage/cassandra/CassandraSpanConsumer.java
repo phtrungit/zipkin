@@ -13,8 +13,8 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,7 +31,7 @@ import zipkin2.storage.SpanConsumer;
 import static zipkin2.storage.cassandra.CassandraUtil.durationIndexBucket;
 
 class CassandraSpanConsumer implements SpanConsumer { // not final for testing
-  final Session session;
+  final CqlSession session;
   final boolean strictTraceId, searchEnabled;
   final InsertSpan.Factory insertSpan;
   final Set<String> autocompleteKeys;
@@ -101,9 +101,9 @@ class CassandraSpanConsumer implements SpanConsumer { // not final for testing
       // fallback to current time on the ts_uuid for span data, so we know when it was inserted
       UUID ts_uuid =
         new UUID(
-          UUIDs.startOf(ts_micro != 0L ? (ts_micro / 1000L) : System.currentTimeMillis())
+          Uuids.startOf(ts_micro != 0L ? (ts_micro / 1000L) : System.currentTimeMillis())
             .getMostSignificantBits(),
-          UUIDs.random().getLeastSignificantBits());
+          Uuids.random().getLeastSignificantBits());
 
       spans.add(insertSpan.newInput(s, ts_uuid));
 

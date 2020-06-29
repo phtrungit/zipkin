@@ -13,23 +13,25 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.DistinctSortedStrings;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
 final class SelectServiceNames extends ResultSetFutureCall<ResultSet> {
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final DistinctSortedStrings services = new DistinctSortedStrings("service_name");
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       this.preparedStatement = session.prepare(
         QueryBuilder.select("service_name").distinct().from(Tables.SERVICE_NAMES));
@@ -46,7 +48,7 @@ final class SelectServiceNames extends ResultSetFutureCall<ResultSet> {
     this.factory = factory;
   }
 
-  @Override protected ResultSetFuture newFuture() {
+  @Override protected CompletionStage<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind());
   }
 

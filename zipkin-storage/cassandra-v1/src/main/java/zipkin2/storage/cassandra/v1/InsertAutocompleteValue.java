@@ -13,13 +13,15 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.Insert;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.DeduplicatingVoidCallFactory;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
@@ -29,7 +31,7 @@ import static zipkin2.storage.cassandra.v1.Tables.AUTOCOMPLETE_TAGS;
 final class InsertAutocompleteValue extends ResultSetFutureCall<Void> {
 
   static class Factory extends DeduplicatingVoidCallFactory<Map.Entry<String, String>> {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
 
     Factory(CassandraStorage storage, int indexTtl) {
@@ -55,7 +57,7 @@ final class InsertAutocompleteValue extends ResultSetFutureCall<Void> {
     this.input = input;
   }
 
-  @Override protected ResultSetFuture newFuture() {
+  @Override protected CompletionStage<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind()
       .setString("key", input.getKey())
       .setString("value", input.getValue()));

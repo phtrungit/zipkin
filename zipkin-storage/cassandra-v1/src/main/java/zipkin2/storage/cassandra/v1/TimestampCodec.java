@@ -13,10 +13,10 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.ProtocolVersion;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.TypeCodec;
+import com.datastax.oss.driver.api.core.cql.ProtocolVersion;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.TypeCodec;
 import java.nio.ByteBuffer;
 
 final class TimestampCodec {
@@ -26,7 +26,7 @@ final class TimestampCodec {
     this.protocolVersion = protocolVersion;
   }
 
-  public TimestampCodec(Session session) {
+  public TimestampCodec(CqlSession session) {
     this(session.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion());
   }
 

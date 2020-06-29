@@ -13,18 +13,20 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import com.google.auto.value.AutoValue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import zipkin2.Call;
 import zipkin2.internal.Nullable;
 import zipkin2.storage.cassandra.CassandraSpanStore.TimestampRange;
@@ -69,11 +71,11 @@ final class SelectTraceIdsFromServiceSpan extends ResultSetFutureCall<ResultSet>
   }
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement selectTraceIdsByServiceSpanName;
     final PreparedStatement selectTraceIdsByServiceSpanNameAndDuration;
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       // separate to avoid: "Unsupported unset value for column duration" maybe SASI related
       // TODO: revisit on next driver update
@@ -195,7 +197,7 @@ final class SelectTraceIdsFromServiceSpan extends ResultSetFutureCall<ResultSet>
   }
 
   @Override
-  protected ResultSetFuture newFuture() {
+  protected CompletableFuture<AsyncResultSet> newFuture() {
     BoundStatement bound = preparedStatement.bind()
       .setString("service", input.service())
       .setString("span", input.span())

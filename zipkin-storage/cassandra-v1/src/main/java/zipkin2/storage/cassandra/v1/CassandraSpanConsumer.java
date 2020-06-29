@@ -13,7 +13,7 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilderSpec;
 import java.nio.ByteBuffer;
@@ -45,7 +45,7 @@ final class CassandraSpanConsumer implements SpanConsumer {
   @Nullable final InsertAutocompleteValue.Factory insertAutocompleteValue;
 
   CassandraSpanConsumer(CassandraStorage storage, CacheBuilderSpec indexCacheSpec) {
-    Session session = storage.session();
+    CqlSession session = storage.session();
     Schema.Metadata metadata = storage.metadata();
     searchEnabled = storage.searchEnabled;
     autocompleteKeys = new LinkedHashSet<>(storage.autocompleteKeys);

@@ -45,15 +45,26 @@
     </dependency>
 
     <dependency>
-      <groupId>com.datastax.cassandra</groupId>
-      <artifactId>cassandra-driver-core</artifactId>
-      <version>${cassandra-driver-core.version}</version>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-core</artifactId>
+      <version>${java-driver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-query-builder</artifactId>
+      <version>${java-driver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-mapper-runtime</artifactId>
+      <version>${java-driver.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>com.datastax.cassandra</groupId>
-      <artifactId>cassandra-driver-mapping</artifactId>
-      <version>${cassandra-driver-core.version}</version>
+      <groupId>com.datastax.oss</groupId>
+      <artifactId>java-driver-mapper-processor</artifactId>
+      <version>${java-driver.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- To test nuance of load balancing behavior -->

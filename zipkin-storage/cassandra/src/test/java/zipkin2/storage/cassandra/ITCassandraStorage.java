@@ -13,9 +13,9 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.Host;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.Host;
+import com.datastax.oss.driver.api.core.cql.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.CqlSession;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -297,7 +297,7 @@ class ITCassandraStorage {
       return InternalForTests.keyspace(testInfo);
     }
 
-    @Override protected Session session() {
+    @Override protected CqlSession session() {
       return backend.session;
     }
 
@@ -315,7 +315,7 @@ class ITCassandraStorage {
 
   static void blockWhileInFlight(CassandraStorage storage) {
     // Now, block until writes complete, notably so we can read them.
-    Session.State state = storage.session().getState();
+    CqlSession.State state = storage.session().getState();
     refresh:
     while (true) {
       for (Host host : state.getConnectedHosts()) {

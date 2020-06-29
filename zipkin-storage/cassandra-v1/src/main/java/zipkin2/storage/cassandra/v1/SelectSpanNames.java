@@ -13,26 +13,29 @@
  */
 package zipkin2.storage.cassandra.v1;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSetFuture;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.querybuilder.QueryBuilder;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import zipkin2.Call;
 import zipkin2.storage.cassandra.internal.call.DistinctSortedStrings;
 import zipkin2.storage.cassandra.internal.call.ResultSetFutureCall;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-final class SelectSpanNames extends ResultSetFutureCall<ResultSet> {
+final class SelectSpanNames extends ResultSetFutureCall<AsyncResultSet> {
 
   static class Factory {
-    final Session session;
+    final CqlSession session;
     final PreparedStatement preparedStatement;
     final DistinctSortedStrings spanNames = new DistinctSortedStrings("span_name");
 
-    Factory(Session session) {
+    Factory(CqlSession session) {
       this.session = session;
       this.preparedStatement = session.prepare(QueryBuilder.select("span_name")
         .from(Tables.SPAN_NAMES)
@@ -56,13 +59,13 @@ final class SelectSpanNames extends ResultSetFutureCall<ResultSet> {
     this.service_name = service_name;
   }
 
-  @Override protected ResultSetFuture newFuture() {
+  @Override protected CompletableFuture<AsyncResultSet> newFuture() {
     return factory.session.executeAsync(factory.preparedStatement.bind()
       .setString("service_name", service_name)
-      .setInt("limit_", 10000));
+      .setInt("limit_", 10000)).toCompletableFuture();
   }
 
-  @Override public ResultSet map(ResultSet input) {
+  @Override public AsyncResultSet map(AsyncResultSet input) {
     return input;
   }
 

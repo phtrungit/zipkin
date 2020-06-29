@@ -13,15 +13,15 @@
  */
 package zipkin2.storage.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.QueryLogger;
-import com.datastax.driver.core.QueryOptions;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
-import com.datastax.driver.core.policies.LatencyAwarePolicy;
-import com.datastax.driver.core.policies.RoundRobinPolicy;
-import com.datastax.driver.core.policies.TokenAwarePolicy;
+import com.datastax.oss.driver.api.core.cql.Cluster;
+import com.datastax.oss.driver.api.core.cql.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.cql.QueryLogger;
+import com.datastax.oss.driver.api.core.cql.QueryOptions;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.policies.DCAwareRoundRobinPolicy;
+import com.datastax.oss.driver.api.core.cql.policies.LatencyAwarePolicy;
+import com.datastax.oss.driver.api.core.cql.policies.RoundRobinPolicy;
+import com.datastax.oss.driver.api.core.cql.policies.TokenAwarePolicy;
 import com.datastax.driver.mapping.MappingManager;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
@@ -48,12 +48,12 @@ final class DefaultSessionFactory implements CassandraStorage.SessionFactory {
    * exception occurred.
    */
   @Override
-  public Session create(CassandraStorage cassandra) {
+  public CqlSession create(CassandraStorage cassandra) {
     Closer closer = Closer.create();
     try {
       Cluster cluster = closer.register(buildCluster(cassandra));
       cluster.register(new QueryLogger.Builder().build());
-      Session session;
+      CqlSession session;
       String keyspace = cassandra.keyspace();
       if (cassandra.ensureSchema()) {
         session = closer.register(cluster.connect());
@@ -77,7 +77,7 @@ final class DefaultSessionFactory implements CassandraStorage.SessionFactory {
     }
   }
 
-  private static void initializeUDTs(Session session) {
+  private static void initializeUDTs(CqlSession session) {
     MappingManager mapping = new MappingManager(session);
     String keyspace = session.getLoggedKeyspace();
     LOG.debug("Registering endpoint and annotation UDTs to keyspace {}", keyspace);
