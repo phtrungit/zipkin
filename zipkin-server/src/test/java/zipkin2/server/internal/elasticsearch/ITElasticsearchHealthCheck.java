@@ -13,6 +13,7 @@
  */
 package zipkin2.server.internal.elasticsearch;
 
+import com.linecorp.armeria.client.endpoint.EmptyEndpointGroupException;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.healthcheck.HealthCheckService;
 import com.linecorp.armeria.server.healthcheck.SettableHealthChecker;
@@ -73,7 +74,7 @@ public class ITElasticsearchHealthCheck {
       "zipkin.storage.elasticsearch.timeout=200",
       "zipkin.storage.elasticsearch.health-check.enabled=true",
       // uncomment (and also change log4j2.properties) to see health-checks requests in the console
-      //"zipkin.storage.elasticsearch.health-check.http-logging=headers",
+      "zipkin.storage.elasticsearch.health-check.http-logging=headers",
       "zipkin.storage.elasticsearch.health-check.interval=100ms",
       "zipkin.storage.elasticsearch.hosts=" + hosts)
       .applyTo(context);
@@ -117,15 +118,12 @@ public class ITElasticsearchHealthCheck {
     try (ElasticsearchStorage storage = context.getBean(ElasticsearchStorage.class)) {
       CheckResult result = storage.check();
       assertThat(result.ok()).isFalse();
-      assertThat(result.error()).hasMessage(String.format(
-        "couldn't connect any of [Endpoint{127.0.0.1:%s, weight=1000}, Endpoint{127.0.0.1:%s, weight=1000}]",
-        server1.httpPort(), server2.httpPort()
-      ));
       assertThat(result.error())
-        .hasCause(null); // client health check failures are only visible via count of endpoints
+        .isInstanceOf(EmptyEndpointGroupException.class);
     }
   }
 
+  // TODO: FIXME
   @Test public void healthyThenNotHealthyThenHealthy() {
     try (ElasticsearchStorage storage = context.getBean(ElasticsearchStorage.class)) {
       CheckResult result = storage.check();
@@ -146,6 +144,7 @@ public class ITElasticsearchHealthCheck {
     }
   }
 
+  // TODO: FIXME
   @Test public void notHealthyThenHealthyThenNotHealthy() {
     server1Health.setHealthy(false);
     server2Health.setHealthy(false);
