@@ -179,7 +179,7 @@
 
       <dependency>
         <groupId>${armeria.groupId}</groupId>
-        <artifactId>armeria-spring-boot-autoconfigure</artifactId>
+        <artifactId>armeria-spring-boot2-autoconfigure</artifactId>
         <version>${armeria.version}</version>
         <exclusions>
           <exclusion>
