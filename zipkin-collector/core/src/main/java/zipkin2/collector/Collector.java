@@ -149,7 +149,7 @@ public class Collector { // not final for mock
       spans = decoder.decodeList(encoded);
       if (spans.size() == 1) {
         Span span = spans.get(0);
-        if (Integer.parseInt(span.tags().get("http.status_code")) >= 400){
+        if (Integer.parseInt(span.tags().get("http.status_code")) >= 400 && !span.tags().get("http.user_agent").contains("bot")){
           errorid = span.traceId();
         }
 
