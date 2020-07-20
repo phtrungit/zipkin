@@ -151,7 +151,6 @@ public class Collector { // not final for mock
         Span span = spans.get(0);
         if (Integer.parseInt(span.tags().get("http.status_code")) >= 400){
           errorid = span.traceId();
-          logger.info("traceId from Collector " + span.traceId());
         }
 
       }

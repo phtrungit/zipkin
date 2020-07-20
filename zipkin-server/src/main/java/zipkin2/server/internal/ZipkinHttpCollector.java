@@ -170,18 +170,15 @@ public class ZipkinHttpCollector {
         Executor executor = ctx.makeContextAware(ctx.blockingTaskExecutor());
         try {
           String traceId = collector.acceptSpans(nioBuffer, decoder, result, executor);
-          LOGGER.info("traceId from Http Collector " + traceId);
           List<Span> trace = collector.storage.traces().getTrace(traceId).execute();
 
           if (traceId.length() != 0 && trace.size() != 0){
             FileWriter file;
             String filePath = "./logs/" + traceId + ".json";
             if (!(new File(filePath)).exists()){
-              LOGGER.info("New log file is creating... " + traceId);
               file = new FileWriter(filePath);
               file.write(trace.toString());
               file.close();
-              LOGGER.info("New file is created " + traceId);
             }
           }
         } catch (Throwable t1) {

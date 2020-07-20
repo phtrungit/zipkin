@@ -56,7 +56,7 @@ public final class V2SpanWriter implements WriteBuffer.Writer<Span> {
       sizeInBytes += 18; // ,"remoteEndpoint":
       sizeInBytes += endpointSizeInBytes(value.remoteEndpoint(), false);
     }
-    if (!value.annotations().isEmpty()) {
+    if (value.annotations() != null && !value.annotations().isEmpty()) {
       sizeInBytes += 17; // ,"annotations":[]
       int length = value.annotations().size();
       if (length > 1) sizeInBytes += length - 1; // comma to join elements
@@ -122,7 +122,7 @@ public final class V2SpanWriter implements WriteBuffer.Writer<Span> {
       b.writeAscii(",\"remoteEndpoint\":");
       writeEndpoint(value.remoteEndpoint(), b, false);
     }
-    if (!value.annotations().isEmpty()) {
+    if (value.annotations() != null && !value.annotations().isEmpty()) {
       b.writeAscii(",\"annotations\":");
       b.writeByte('[');
       for (int i = 0, length = value.annotations().size(); i < length; ) {

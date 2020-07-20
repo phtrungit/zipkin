@@ -14,6 +14,7 @@
 package zipkin2.server.internal;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.gson.Gson;
 import com.linecorp.armeria.common.AggregatedHttpResponse;
 import com.linecorp.armeria.common.HttpData;
 import com.linecorp.armeria.common.HttpHeaderNames;
@@ -29,14 +30,13 @@ import com.linecorp.armeria.server.annotation.Param;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import org.slf4j.Logger;
+
+import java.io.*;
+import java.sql.Array;
+import java.util.*;
+
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import zipkin2.Call;
@@ -55,6 +55,7 @@ import static com.linecorp.armeria.common.MediaType.ANY_TEXT_TYPE;
 @ConditionalOnProperty(name = "zipkin.query.enabled", matchIfMissing = true)
 @ExceptionHandler(BodyIsExceptionMessage.class)
 public class ZipkinQueryApiV2 {
+  static final Logger LOGGER = LoggerFactory.getLogger(ZipkinQueryApiV2.class);
   final String storageType;
   final StorageComponent storage; // don't cache spanStore here as it can cause the app to crash!
   final long defaultLookback;
@@ -155,7 +156,21 @@ public class ZipkinQueryApiV2 {
     traceId = Span.normalizeTraceId(traceId);
     List<Span> trace = storage.traces().getTrace(traceId).execute();
     if (trace.isEmpty()) {
-      return AggregatedHttpResponse.of(NOT_FOUND, ANY_TEXT_TYPE, traceId + " not found");
+      LOGGER.info("TraceId: " + traceId + " cannot be found in memory!");
+      String filePath = "./logs/" + traceId + ".json";
+      if ((new File(filePath)).exists()){
+        LOGGER.info("TraceId: " + traceId + " is restoring....");
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
+
+        Gson gson = new Gson();
+        Span[] json = gson.fromJson(bufferedReader, Span[].class);
+        List<Span> backupTrace = new ArrayList<Span>(Arrays.asList(json));
+        LOGGER.info("TraceId: " + traceId + " is restored!");
+        return jsonResponse(SpanBytesEncoder.JSON_V2.encodeList(backupTrace));
+      }else{
+        LOGGER.info("TraceId: " + traceId + " cannot be found in both memory & logs folder!");
+        return AggregatedHttpResponse.of(NOT_FOUND, ANY_TEXT_TYPE, traceId + " not found");
+      }
     }
     return jsonResponse(SpanBytesEncoder.JSON_V2.encodeList(trace));
   }
