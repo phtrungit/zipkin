@@ -81,10 +81,11 @@ public final class SpanBytesDecoderDetector {
   public static BytesDecoder<Span> decoderForListMessage(ByteBuffer spans) {
     BytesDecoder<Span> decoder = detectDecoder(spans);
     byte first = spans.get(spans.position());
+
     if (first != 12 /* List[ThriftSpan] */
         && first != 11 /* openzipkin/zipkin-reporter-java#133 */
         && !protobuf3(spans) && first != '[') {
-      throw new IllegalArgumentException("Expected json, proto3 or thrift list encoding");
+      throw new IllegalArgumentException("Expected json, proto3 or thrift list encoding " + first);
     }
     return decoder;
   }

@@ -30,13 +30,19 @@ import com.linecorp.armeria.server.annotation.ExceptionHandler;
 import com.linecorp.armeria.server.annotation.Post;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.util.ReferenceCountUtil;
+
+import java.io.File;
+import java.io.FileWriter;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+
+import org.jooq.tools.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -45,6 +51,7 @@ import zipkin2.Span;
 import zipkin2.SpanBytesDecoderDetector;
 import zipkin2.codec.BytesDecoder;
 import zipkin2.codec.SpanBytesDecoder;
+import zipkin2.codec.SpanBytesEncoder;
 import zipkin2.collector.Collector;
 import zipkin2.collector.CollectorMetrics;
 import zipkin2.collector.CollectorSampler;
@@ -142,8 +149,10 @@ public class ZipkinHttpCollector {
         }
 
         try {
+          LOGGER.info(String.valueOf(nioBuffer));
           SpanBytesDecoderDetector.decoderForListMessage(nioBuffer);
         } catch (IllegalArgumentException e) {
+          LOGGER.info(String.valueOf(e));
           result.onError(new IllegalArgumentException("Expected a " + decoder + " encoded list\n"));
           return null;
         } catch (Throwable t1) {
@@ -162,7 +171,25 @@ public class ZipkinHttpCollector {
         // callback is context aware to continue the trace.
         Executor executor = ctx.makeContextAware(ctx.blockingTaskExecutor());
         try {
-          collector.acceptSpans(nioBuffer, decoder, result, executor);
+          String traceId = collector.acceptSpans(nioBuffer, decoder, result, executor);
+          LOGGER.info("traceId from Http Collector " + traceId);
+          List<Span> trace = collector.storage.traces().getTrace(traceId).execute();
+
+          if (traceId.length() != 0 && trace.size() != 0){
+            FileWriter file;
+            String filePath = "./logs/" + traceId + ".json";
+            if (!(new File(filePath)).exists()){
+              LOGGER.info("New log file is creating... " + traceId);
+              file = new FileWriter(filePath);
+              file.write(trace.toString());
+              file.close();
+            }
+
+            LOGGER.info("New file is created " + traceId);
+          }
+
+          LOGGER.info("Trace from Http Collector " + trace);
+          LOGGER.info("Trace as string " + trace.toString());
         } catch (Throwable t1) {
           result.onError(t1);
           return null;
@@ -170,7 +197,6 @@ public class ZipkinHttpCollector {
       } finally {
         ReferenceCountUtil.release(content);
       }
-
       return null;
     });
 

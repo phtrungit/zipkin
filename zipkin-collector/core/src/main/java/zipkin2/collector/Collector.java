@@ -29,7 +29,6 @@ import zipkin2.codec.SpanBytesDecoder;
 import zipkin2.storage.StorageComponent;
 
 import static java.lang.String.format;
-import static java.util.logging.Level.FINE;
 import static zipkin2.Call.propagateIfFatal;
 
 /**
@@ -94,7 +93,7 @@ public class Collector { // not final for mock
   final Logger logger;
   final CollectorMetrics metrics;
   final CollectorSampler sampler;
-  final StorageComponent storage;
+  public StorageComponent storage;
 
   Collector(Builder builder) {
     if (builder.logger == null) throw new NullPointerException("logger == null");
@@ -142,16 +141,27 @@ public class Collector { // not final for mock
   }
 
   /** Like {@link #acceptSpans(byte[], BytesDecoder, Callback)}, except using a byte buffer. */
-  public void acceptSpans(ByteBuffer encoded, SpanBytesDecoder decoder, Callback<Void> callback,
+  public String acceptSpans(ByteBuffer encoded, SpanBytesDecoder decoder, Callback<Void> callback,
     Executor executor) {
     List<Span> spans;
+    String errorid = "";
     try {
       spans = decoder.decodeList(encoded);
+      if (spans.size() == 1) {
+        Span span = spans.get(0);
+        if (Integer.parseInt(span.tags().get("http.status_code")) >= 400){
+          errorid = span.traceId();
+          logger.info("traceId from Collector " + span.traceId());
+        }
+
+      }
     } catch (RuntimeException | Error e) {
       handleDecodeError(e, callback);
-      return;
+      return "";
     }
+
     accept(spans, callback, executor);
+    return errorid;
   }
 
   /**
