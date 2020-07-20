@@ -149,10 +149,8 @@ public class ZipkinHttpCollector {
         }
 
         try {
-          LOGGER.info(String.valueOf(nioBuffer));
           SpanBytesDecoderDetector.decoderForListMessage(nioBuffer);
         } catch (IllegalArgumentException e) {
-          LOGGER.info(String.valueOf(e));
           result.onError(new IllegalArgumentException("Expected a " + decoder + " encoded list\n"));
           return null;
         } catch (Throwable t1) {
@@ -183,13 +181,9 @@ public class ZipkinHttpCollector {
               file = new FileWriter(filePath);
               file.write(trace.toString());
               file.close();
+              LOGGER.info("New file is created " + traceId);
             }
-
-            LOGGER.info("New file is created " + traceId);
           }
-
-          LOGGER.info("Trace from Http Collector " + trace);
-          LOGGER.info("Trace as string " + trace.toString());
         } catch (Throwable t1) {
           result.onError(t1);
           return null;

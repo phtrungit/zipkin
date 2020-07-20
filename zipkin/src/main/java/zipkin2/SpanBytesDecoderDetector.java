@@ -85,7 +85,7 @@ public final class SpanBytesDecoderDetector {
     if (first != 12 /* List[ThriftSpan] */
         && first != 11 /* openzipkin/zipkin-reporter-java#133 */
         && !protobuf3(spans) && first != '[') {
-      throw new IllegalArgumentException("Expected json, proto3 or thrift list encoding " + first);
+      throw new IllegalArgumentException("Expected json, proto3 or thrift list encoding ");
     }
     return decoder;
   }
